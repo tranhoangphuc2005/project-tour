@@ -1,24 +1,53 @@
-import logo from './logo.svg';
-import './App.css';
+import Loading from "./Components/Loading";
+import NoTour from "./Components/NoTour";
+import Tour from "./Components/Tour";
+import axios from "axios";
+import { useEffect, useState } from "react";
+
+const url = "https://course-api.com/react-tours-project";
 
 function App() {
+  const [tours, setTour] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    getToursAPI();
+  }, []);
+
+  const getToursAPI = async () => {
+    setIsLoading(true);
+    let res = await axios.get(url);
+    const newData = res.data.map((v) => {
+      const priceByDay = v.price.replace(",", ".");
+      return {
+        ...v,
+        price: priceByDay,
+        day: 1,
+        priceByDay: priceByDay,
+      };
+    });
+    setTour(newData);
+    setIsLoading(false);
+  };
+
+  const handleUpdateDay = (id, value) => {
+    const newTours = [...tours].map((v) => {
+      if (v.id === id) {
+        const priceByDay = v.price * value;
+        return { ...v, day: value, priceByDay };
+      } else {
+        return v;
+      }
+    });
+    setTour(newTours);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      {isLoading && <Loading></Loading>}
+      <NoTour></NoTour>
+      <Tour tours={tours} onUpdateDay={handleUpdateDay}></Tour>
+    </>
   );
 }
 
